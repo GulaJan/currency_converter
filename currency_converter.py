@@ -4,59 +4,77 @@
 # Date: 02/2018
 # File: CLI class
 
-from cli import fetchData, filterData, convert, printJSON
-from constants import decipherSymbol
-import sys
-import argparse
+import urllib.request
+import re
+import json
+import decimal
+from constants import decipher_symbol
 
-class __main__():
-	parser = argparse.ArgumentParser()
-	parser.add_argument('--amount', action="store", required=True, type=float, dest="amount", help='The amount of input currency to convert.')
-	parser.add_argument('--input_currency', action="store", required=True, dest="inCurr", help='Currency from which we want to convert. A 3 letter name or the currency symbol.')
-	parser.add_argument('--output_currency', action="store", dest="outCurr", help='Currency to convert to. A 3 letter name or the currency symbol.')
-	args = parser.parse_args()
-	if(args.inCurr == args.outCurr):
-		sys.stderr.write("Output currency has to differ from the input currency!\n")
-		sys.exit(1)
-	if(args.amount < 0):
-		sys.stderr.write("Cannot convert a negative value!\n")
-		sys.exit(1)
+def fetch_rates():
+	url = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
+	all_rates = urllib.request.urlopen(url).read()		
+	return all_rates
 
-		
-	arguments = args
-	print(arguments)
-	data = fetchData()
-	filteredData = filterData(data)
-	if(arguments.outCurr != None) :	
-		if((len(arguments.outCurr) != 3) or (not(arguments.outCurr.isupper()))):
+def rates_to_array(all_rates):
+	all_rates = all_rates.decode()
+	pattern = "currency='([a-z,A-Z]{3})'\srate='([\d]+[.][\d]+)'"
+	matched = re.findall(pattern, all_rates)
+	return matched
+
+def calculate(amount, input_currency, output_currency, rates):
+	if(output_currency == 'EUR'):
+		output_rate = 1
+	if(input_currency == 'EUR'):
+		input_rate = 1
+	for item in rates:
+		if(item[0] == input_currency):
+			input_rate = item[1]
+		if(item[0] == output_currency): #item[0] = currencies, item[1] = rates
+			output_rate = item[1]
+
+	return amount / decimal.Decimal(input_rate) * decimal.Decimal(output_rate)
+
+def recognize_symbol(arguments):
+	if(arguments['output_currency'] != None) :	
+		if((len(arguments['output_currency']) != 3) or (not(arguments['output_currency'].isupper()))):
 			try:
-				arguments.outCurr = decipherSymbol(arguments.outCurr)
+				arguments['output_currency'] = decipher_symbol(arguments['output_currency'])
 			except(KeyError):
 				sys.stderr.write("Output symbol was not recognized!\n")
-				sys.exit(3)
+				sys.exit(2)
 
-	if((len(arguments.inCurr) != 3) or (not(arguments.inCurr.isupper()))):
+	if((len(arguments['input_currency']) != 3) or (not(arguments['input_currency'].isupper()))):
 		try:
-			arguments.inCurr = decipherSymbol(arguments.inCurr)
+			arguments['input_currency'] = decipher_symbol(arguments['input_currency'])
 		except(KeyError):
 			sys.stderr.write("Input symbol was not recognized!\n")
-			sys.exit(3)
+			sys.exit(2)
 
-	if(arguments.outCurr == None):
-		res = convert(arguments.amount, arguments.inCurr, 'EUR', filteredData)
-		for item in filteredData:
+	return arguments
+
+def convert(amount, input_currency, output_currency, filtered_rates):
+	if(output_currency == None):
+		all_currencies = {}
+		convert_to_euro = calculate(amount, input_currency, 'EUR', filtered_rates)
+		two_places_result = str(round(convert_to_euro, 2))
+		# If no output is set we have to explicitly add EUR because it's the base in our data source
+		all_currencies['EUR'] = two_places_result
+		for item in filtered_rates:
 			try:
-				res = convert(arguments.amount, arguments.inCurr, item[0], filteredData)
+				converted_value = calculate(amount, input_currency, item[0], filtered_rates)
 			except(UnboundLocalError):
-				sys.stderr.write("Input or output currency was not recognized!\n")
-				sys.exit(3)
+				sys.stderr.write("Input currency was not recognized!\n")
+				sys.exit(2)
+
+			two_places_result = str(round(converted_value, 2))
+			all_currencies[item[0]] = two_places_result
+
+		return all_currencies
 
 	else:
 		try:
-			res = convert(arguments.amount, arguments.inCurr, arguments.outCurr, filteredData)
+			converted_value = calculate(amount, input_currency, output_currency, filtered_rates)
 		except(UnboundLocalError):
 			sys.stderr.write("Input or output currency was not recognized!\n")
-			sys.exit(3)
-
-	printJSON(arguments.amount, arguments.inCurr, arguments.outCurr, res)
-	sys.exit(0)
+			sys.exit(2)
+		return converted_value
