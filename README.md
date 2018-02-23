@@ -16,7 +16,17 @@ The converted amount was then represented using JSON's library for Python.
 After we've implemented the CLI functions the only thing left was to implement an API. I've done this by using the **Flask framework for Python** that accepts requests and writes responses using JSON's jsonify.
 ## Usage
 ### CLI
+
+	python3 ./currency_converter.py --amount --input_currency [--output_currency]  
+
+#### Example
+
 	python3 ./currency_converter.py --amount 500 --input_currency=CZK --output_currency=USD
+
+#### CLI return codes
+	+ 0 : No error
+	+ 1 : Parameter error
+	+ 2 : Symbol not recognized error
 ### API
 	python3 ./api.py
 
