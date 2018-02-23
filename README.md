@@ -9,7 +9,8 @@ After fetching our data it was necessary to filter them leaving only the currenc
 A tricky part of the implementation was that the currency could be inserted by its symbol, which ment I've had to map the symbols to its 3 letter abbreviation. This is done in the **constants.py** file. This also brought up a problem with currencies having the same symbol e.g. USD and AUD both have $. My solution to this problem was to have a default currency for each case. Default currencies are defined in the constants.py file.  
 <br>
 The last step was to finish the conversion. Any conversion could be done by this formula:  
-<center> **amount / input_currency * output_currency** </center>    
+**amount / input_currency * output_currency**
+<br>
 The converted amount was then represented using JSON's library for Python.
 <br>
 After we've implemented the CLI functions the only thing left was to implement an API. I've done this by using the **Flask framework for Python** that accepts requests and writes responses using JSON's jsonify.
