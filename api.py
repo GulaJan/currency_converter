@@ -55,7 +55,7 @@ def api():
 		return jsonify({'input': {'amount': str(decimal_amount), 'currency': input_currency}, 'output': {output_currency : two_decimal_places}})
 
 if __name__ == '__main__' :
-	app.run('127.0.0.1', 5003)
+	app.run('127.0.0.1', 5000)
 	#Set for localhost listening on the default port 5000
 	#To reach from outside of localhost use these settings:
 	#app.run('0.0.0.0')
