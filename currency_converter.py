@@ -13,15 +13,13 @@ from constants import decipher_symbol
 def fetch_rates():
 	url = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
 	all_rates = urllib.request.urlopen(url).read()		
-	return all_rates
-
-def rates_to_array(all_rates):
-	all_rates = all_rates.decode()
+	decoded_rates = all_rates.decode()
 	pattern = "currency='([a-z,A-Z]{3})'\srate='([\d]+[.][\d]+)'"
-	matched = re.findall(pattern, all_rates)
+	matched = re.findall(pattern, decoded_rates)
+	# matched contains key/value pairs where keys are 3 letter currency codes (string) and values are rates (float)
 	return matched
 
-def calculate(amount, input_currency, output_currency, rates):
+def calculate_result(amount, input_currency, output_currency, rates):
 	if(output_currency == 'EUR'):
 		output_rate = 1
 	if(input_currency == 'EUR'):
@@ -29,38 +27,33 @@ def calculate(amount, input_currency, output_currency, rates):
 	for item in rates:
 		if(item[0] == input_currency):
 			input_rate = item[1]
-		if(item[0] == output_currency): #item[0] = currencies, item[1] = rates
+		if(item[0] == output_currency): #item[0] = string - currencies, item[1] = float - rates
 			output_rate = item[1]
 
 	return amount / decimal.Decimal(input_rate) * decimal.Decimal(output_rate)
 
-def recognize_symbol(arguments):
-	if(arguments['output_currency'] != None) :	
-		if((len(arguments['output_currency']) != 3) or (not(arguments['output_currency'].isupper()))):
-			try:
-				arguments['output_currency'] = decipher_symbol(arguments['output_currency'])
-			except (KeyError):
-				return KeyError
-
-	if((len(arguments['input_currency']) != 3) or (not(arguments['input_currency'].isupper()))):
+def recognize_symbol(currency):
+	if((len(currency) != 3) or (not(currency.isupper()))):
 		try:
-			arguments['input_currency'] = decipher_symbol(arguments['input_currency'])
-		except(KeyError):
-			return KeyError
-	return arguments
+			currency = decipher_symbol(currency)
+		except KeyError:
+			raise KeyError
 
-def convert(amount, input_currency, output_currency, filtered_rates):
+	return currency
+
+def convert_to_output_currency(amount, input_currency, output_currency, filtered_rates):
 	if(output_currency == None):
 		all_currencies = {}
-		convert_to_euro = calculate(amount, input_currency, 'EUR', filtered_rates)
+		convert_to_euro = calculate_result(amount, input_currency, 'EUR', filtered_rates)
 		two_places_result = str(round(convert_to_euro, 2))
 		# If no output is set we have to explicitly add EUR because it's the base in our data source
 		all_currencies['EUR'] = two_places_result
+		# item[0] = string - currency code, item[1] = float - currency rate
 		for item in filtered_rates:
 			try:
-				converted_value = calculate(amount, input_currency, item[0], filtered_rates)
-			except(UnboundLocalError):
-				return UnboundLocalError
+				converted_value = calculate_result(amount, input_currency, item[0], filtered_rates)
+			except UnboundLocalError:
+				raise UnboundLocalError
 
 			two_places_result = str(round(converted_value, 2))
 			all_currencies[item[0]] = two_places_result
@@ -69,7 +62,7 @@ def convert(amount, input_currency, output_currency, filtered_rates):
 
 	else:
 		try:
-			converted_value = calculate(amount, input_currency, output_currency, filtered_rates)
-		except(UnboundLocalError):
-			return UnboundLocalError
+			converted_value = calculate_result(amount, input_currency, output_currency, filtered_rates)
+		except UnboundLocalError:
+			raise UnboundLocalError
 		return converted_value

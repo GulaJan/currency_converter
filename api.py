@@ -7,7 +7,7 @@
 import sys
 import decimal
 from flask import Flask, request, jsonify
-from currency_converter import fetch_rates, rates_to_array, convert, recognize_symbol
+from currency_converter import fetch_rates, convert_to_output_currency, recognize_symbol
 app = Flask(__name__)
 
 @app.route('/currency_converter')
@@ -15,41 +15,55 @@ def api():
 	amount = request.args.get('amount')
 	input_currency = request.args.get('input_currency')
 	output_currency = request.args.get('output_currency')
-	if(not(amount.replace('.','',1).isdigit())):
-		return "Amount has to be a positive number!"
 	if(amount == None):
-		return "Amount required!"
+		response = jsonify({'error': {'code' : '201', 'message': 'Amount required'}})
+		response.status_code = 201
+		return response
+	if(not(amount.replace('.','',1).isdigit())):
+		response = jsonify({'error': {'code' : '201', 'message': 'Amount has to be a positive number'}})
+		response.status_code = 201
+		return response
 	if(input_currency == None):
-		return "Input currency required!"
-	if(input_currency == output_currency):
-		return "Output currency has to differ from the input currency!"
+		response = jsonify({'error': {'code' : '201', 'message': 'Input currency required'}})
+		response.status_code = 201
+		return response
 	
-	rates = fetch_rates()
-	filtered_rates = rates_to_array(rates)
+	try:
+		input_currency = recognize_symbol(input_currency)
+	except KeyError:
+		response = jsonify({'error': {'code' : '202', 'message': 'Input symbol was not recognized'}})
+		response.status_code = 202
+		return response
 
-	currencies = {'input_currency': input_currency, 'output_currency':output_currency}
-	currencies = recognize_symbol(currencies)
-	
-	if(currencies == KeyError):	
-		return "Input or output symbol was not recognized!\n"
-
-	input_currency = currencies['input_currency']
-	output_currency = currencies['output_currency']
+	if(output_currency != None):
+		try:
+			output_currency = recognize_symbol(output_currency)
+		except KeyError:
+			response = jsonify({'error': {'code' : '202', 'message': 'Output symbol was not recognized'}})
+			response.status_code = 202
+			return response
 
 	decimal_amount = decimal.Decimal(amount)
 
+	rates = fetch_rates()
+
 	if(output_currency == None):
 		try:
-			all_currencies = convert(decimal_amount, input_currency, output_currency, filtered_rates)
-		except(UnboundLocalError):
-			return "Input currency was not recognized!\n"
+			all_currencies = convert_to_output_currency(decimal_amount, input_currency, output_currency, rates)
+		except UnboundLocalError:
+			response = jsonify({'error': {'code' : '202', 'message': 'Input currency was not recognized'}})
+			response.status_code = 202
+			return response
 
 		return jsonify({'input': {'amount': str(decimal_amount), 'currency': input_currency}, 'output': all_currencies})
 
 	else:
-		converted_val = convert(decimal_amount, input_currency, output_currency, filtered_rates)
-		if(converted_val == UnboundLocalError):
-			return "Input or output currency was not recognized!\n"
+		try:
+			converted_val = convert_to_output_currency(decimal_amount, input_currency, output_currency, rates)
+		except UnboundLocalError:
+			response = jsonify({'error': {'code' : '202', 'message': 'Input or output currency was not recognized'}})
+			response.status_code = 202
+			return response
 
 		two_decimal_places = str(round(converted_val, 2))
 		return jsonify({'input': {'amount': str(decimal_amount), 'currency': input_currency}, 'output': {output_currency : two_decimal_places}})
