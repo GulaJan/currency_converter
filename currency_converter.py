@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # Author: Jan Gula
 # Date: 02/2018
-# File: CLI class
+# File: Shared functions for both CLI and API
 
 import urllib.request
 import re
@@ -39,17 +39,14 @@ def recognize_symbol(arguments):
 		if((len(arguments['output_currency']) != 3) or (not(arguments['output_currency'].isupper()))):
 			try:
 				arguments['output_currency'] = decipher_symbol(arguments['output_currency'])
-			except(KeyError):
-				sys.stderr.write("Output symbol was not recognized!\n")
-				sys.exit(2)
+			except (KeyError):
+				return KeyError
 
 	if((len(arguments['input_currency']) != 3) or (not(arguments['input_currency'].isupper()))):
 		try:
 			arguments['input_currency'] = decipher_symbol(arguments['input_currency'])
 		except(KeyError):
-			sys.stderr.write("Input symbol was not recognized!\n")
-			sys.exit(2)
-
+			return KeyError
 	return arguments
 
 def convert(amount, input_currency, output_currency, filtered_rates):
@@ -63,8 +60,7 @@ def convert(amount, input_currency, output_currency, filtered_rates):
 			try:
 				converted_value = calculate(amount, input_currency, item[0], filtered_rates)
 			except(UnboundLocalError):
-				sys.stderr.write("Input currency was not recognized!\n")
-				sys.exit(2)
+				return UnboundLocalError
 
 			two_places_result = str(round(converted_value, 2))
 			all_currencies[item[0]] = two_places_result
@@ -75,6 +71,5 @@ def convert(amount, input_currency, output_currency, filtered_rates):
 		try:
 			converted_value = calculate(amount, input_currency, output_currency, filtered_rates)
 		except(UnboundLocalError):
-			sys.stderr.write("Input or output currency was not recognized!\n")
-			sys.exit(2)
+			return UnboundLocalError
 		return converted_value

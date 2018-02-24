@@ -35,13 +35,19 @@ class __main__():
 	arguments.amount = str(round(arguments.amount, 2))
 	arguments.amount = decimal.Decimal(arguments.amount)
 	if(arguments.output_currency == None):
-		all_currencies = convert(arguments.amount, arguments.input_currency, arguments.output_currency, filtered_rates)
-		print(json.dumps({'input': {'amount': str(arguments.amount), 'currency': arguments.input_currency}, 'output': all_currencies}, indent = 4, sort_keys=True))
+		try:
+			all_currencies = convert(arguments.amount, arguments.input_currency, arguments.output_currency, filtered_rates)
+		except(UnboundLocalError):
+			sys.stderr.write("Input currency was not recognized!\n")
+			sys.exit(2)
 
+		print(json.dumps({'input': {'amount': str(arguments.amount), 'currency': arguments.input_currency}, 'output': all_currencies}, indent = 4, sort_keys=True))
 	else:
 		converted_val = convert(arguments.amount, arguments.input_currency, arguments.output_currency, filtered_rates)
+		if(converted_val == UnboundLocalError):
+			sys.stderr.write("Input or output currency was not recognized!\n")
+			sys.exit(2)
 		two_decimal_places = str(round(converted_val, 2))
-		decimal_result = decimal.Decimal(two_decimal_places)
-		print(json.dumps({'input': {'amount': str(arguments.amount), 'currency': arguments.input_currency}, 'output': {arguments.output_currency : str(decimal_result)}}, indent = 4, sort_keys=True))
+		print(json.dumps({'input': {'amount': str(arguments.amount), 'currency': arguments.input_currency}, 'output': {arguments.output_currency : str(two_decimal_places)}}, indent = 4, sort_keys=True))
 
 	sys.exit(0)

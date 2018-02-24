@@ -15,23 +15,22 @@ def api():
 	amount = request.args.get('amount')
 	input_currency = request.args.get('input_currency')
 	output_currency = request.args.get('output_currency')
+	if(not(amount.replace('.','',1).isdigit())):
+		return "Amount has to be a positive number!"
 	if(amount == None):
 		return "Amount required!"
 	if(input_currency == None):
 		return "Input currency required!"
 	if(input_currency == output_currency):
 		return "Output currency has to differ from the input currency!"
-	if(decimal.Decimal(amount) < 0):
-		return "Cannot convert a negative value!"
-
+	
 	rates = fetch_rates()
 	filtered_rates = rates_to_array(rates)
 
 	currencies = {'input_currency': input_currency, 'output_currency':output_currency}
+	currencies = recognize_symbol(currencies)
 	
-	try:
-		currencies = recognize_symbol(currencies)
-	except(KeyError):
+	if(currencies == KeyError):	
 		return "Input or output symbol was not recognized!\n"
 
 	input_currency = currencies['input_currency']
@@ -48,17 +47,15 @@ def api():
 		return jsonify({'input': {'amount': str(decimal_amount), 'currency': input_currency}, 'output': all_currencies})
 
 	else:
-		try:
-			converted_val = convert(decimal_amount, input_currency, output_currency, filtered_rates)
-		except(UnboundLocalError):
+		converted_val = convert(decimal_amount, input_currency, output_currency, filtered_rates)
+		if(converted_val == UnboundLocalError):
 			return "Input or output currency was not recognized!\n"
 
-		two_decimal_places = "%.2f" % converted_val
-		decimal_result = decimal.Decimal(two_decimal_places)
-		return jsonify({'input': {'amount': str(decimal_amount), 'currency': input_currency}, 'output': {output_currency : str(decimal_result)}})
+		two_decimal_places = str(round(converted_val, 2))
+		return jsonify({'input': {'amount': str(decimal_amount), 'currency': input_currency}, 'output': {output_currency : two_decimal_places}})
 
 if __name__ == '__main__' :
-	app.run('127.0.0.1', 5000)
+	app.run('127.0.0.1', 5003)
 	#Set for localhost listening on the default port 5000
 	#To reach from outside of localhost use these settings:
 	#app.run('0.0.0.0')
