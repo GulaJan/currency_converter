@@ -7,10 +7,11 @@
 import urllib.request
 import re
 import json
-import decimal
+import decimal  # needed?
 from constants import decipher_symbol
 
 def fetch_rates():
+	# xmltodict or https://docs.python.org/3.6/library/xml.etree.elementtree.html
 	url = "http://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml"
 	all_rates = urllib.request.urlopen(url).read()		
 	decoded_rates = all_rates.decode()
@@ -20,6 +21,7 @@ def fetch_rates():
 	return matched
 
 def calculate_result(amount, input_currency, output_currency, rates):
+	#  simplify
 	if(output_currency == 'EUR'):
 		output_rate = 1
 	if(input_currency == 'EUR'):
@@ -30,9 +32,11 @@ def calculate_result(amount, input_currency, output_currency, rates):
 		if(item[0] == output_currency): #item[0] = string - currencies, item[1] = float - rates
 			output_rate = item[1]
 
+	
 	return amount / decimal.Decimal(input_rate) * decimal.Decimal(output_rate)
 
 def recognize_symbol(currency):
+	# simplify... for example use .get(symbol) in decipher_symbol :)
 	if((len(currency) != 3) or (not(currency.isupper()))):
 		try:
 			currency = decipher_symbol(currency)

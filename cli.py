@@ -11,6 +11,9 @@ import json
 from currency_converter import fetch_rates, recognize_symbol, convert_to_output_currency
 from constants import decipher_symbol
 
+# simplify pls
+# so much try except
+
 class __main__():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--amount', action="store", required=True, type=float, dest="amount", help='The amount of input currency to convert.')
@@ -27,6 +30,7 @@ class __main__():
 		sys.stderr.write("Input currency was not recognized!\n")
 		sys.exit(2)
 
+	# here
 	if(arguments.output_currency != None):
 		try:
 			arguments.output_currency = recognize_symbol(arguments.output_currency)
