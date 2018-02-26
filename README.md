@@ -1,3 +1,5 @@
+- missing requirements.txt
+
 # Currency converter in Python
 ## Task
 My task was to implement a **Command Line Interface (CLI)** and an **Application Programming Interface (API)** of a currency converter using the Python language.
