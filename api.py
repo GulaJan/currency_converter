@@ -15,10 +15,13 @@ def api():
 	amount = request.args.get('amount')
 	input_currency = request.args.get('input_currency')
 	output_currency = request.args.get('output_currency')
+	
+	# if not ammount:
 	if(amount == None):
 		response = jsonify({'error': {'code' : '201', 'message': 'Amount required'}})
 		response.status_code = 201
 		return response
+	# :thinking_face:
 	if(not(amount.replace('.','',1).isdigit())):
 		response = jsonify({'error': {'code' : '201', 'message': 'Amount has to be a positive number'}})
 		response.status_code = 201
@@ -27,6 +30,29 @@ def api():
 		response = jsonify({'error': {'code' : '201', 'message': 'Input currency required'}})
 		response.status_code = 201
 		return response
+	
+	"""
+	if 1:
+	   something
+	if 2:
+	   almost the same
+	if 3:
+	   almost the same
+	>>>>
+
+	err = ""  
+        if 1:
+	   err = "1"
+	elif 2:
+	   err = "2"
+	elif 3:
+	   err = "3"
+	
+	if err:
+	   something with errr
+	   return
+	"""
+	
 	
 	try:
 		input_currency = recognize_symbol(input_currency)
