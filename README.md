@@ -26,10 +26,14 @@ After we've implemented the CLI functions the only thing left was to implement a
 #### CLI return codes
 	+ 0 : No error
 	+ 1 : Parameter error
-	+ 2 : Symbol not recognized error
+	+ 2 : Symbol or currency not recognized
 ### API
 	python3 ./api.py
 
 	For a localhost test
 
 	127.0.0.1:5000/currency_converter?amount=0.9&input_currency=EUR&output_currency=CZK
+#### API status codes
+	+ 200 : No error
+	+ 201 : Parameter error
+	+ 202 : Symbol or currency not recognized
