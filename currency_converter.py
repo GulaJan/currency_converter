@@ -22,6 +22,9 @@ def fetch_rates():
 	return currency_rates_dict
 
 def calculate_result(amount, input_currency, output_currency, currency_rates):
+	# if i am getting it right `currency_rates` is dict
+	# so input_rate = currency_rates.get(input_currency).... etc...and check for Valid rates 
+	
 	for currency_code in currency_rates:
 		if(currency_code == input_currency):
 			input_rate = currency_rates[currency_code]

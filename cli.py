@@ -11,6 +11,7 @@ import json
 from currency_converter import fetch_rates, recognize_symbol, convert_to_output_currency
 from constants import decipher_symbol
 
+# https://docs.python.org/3.6/library/__main__.html
 class __main__():
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--amount', action="store", required=True, type=float, dest="amount", help='The amount of input currency to convert.')
@@ -32,6 +33,7 @@ class __main__():
 	
 	arguments.amount = decimal.Decimal(str(round(arguments.amount, 2)))
 
+	#again duplicate code L36-L51
 	if not arguments.output_currency:
 		try:
 			all_currencies = convert_to_output_currency(arguments.amount, arguments.input_currency, arguments.output_currency, rates)

@@ -5,6 +5,7 @@
 # File: API using Flask
 
 import sys
+# decimal still needed :thinking_face: ?
 import decimal
 from flask import Flask, request, jsonify
 from currency_converter import fetch_rates, convert_to_output_currency, recognize_symbol
@@ -24,7 +25,7 @@ def api():
 		err_msg = 'Amount has to be a positive number'
 	elif not input_currency:
 		err_msg = 'Input currency required'
-	
+
 	if err_msg:
 		response = jsonify({'error': {'code' : '201', 'message': err_msg}})		
 		response.status_code = 201
@@ -34,11 +35,13 @@ def api():
 
 	try:
 		input_currency = recognize_symbol(input_currency, rates)
+		# if output_currency:
 		if(output_currency != None):
 			output_currency = recognize_symbol(output_currency, rates)
 	except KeyError:
 		err_msg = 'Input or output symbol was not recognized'
 
+	# why ( ) ... L29 not
 	if(err_msg):
 		response = jsonify({'error': {'code' : '202', 'message': err_msg}})		
 		response.status_code = 202
@@ -46,6 +49,7 @@ def api():
 
 	decimal_amount = decimal.Decimal(amount)
 
+	# L50-L70 I see duplicate code > merge it please
 	if not output_currency :
 		try:
 			all_currencies = convert_to_output_currency(decimal_amount, input_currency, output_currency, rates)
