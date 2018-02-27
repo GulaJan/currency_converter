@@ -15,39 +15,38 @@ def api():
 	amount = request.args.get('amount')
 	input_currency = request.args.get('input_currency')
 	output_currency = request.args.get('output_currency')
-	if(amount == None):
-		response = jsonify({'error': {'code' : '201', 'message': 'Amount required'}})
-		response.status_code = 201
-		return response
-	if(not(amount.replace('.','',1).isdigit())):
-		response = jsonify({'error': {'code' : '201', 'message': 'Amount has to be a positive number'}})
-		response.status_code = 201
-		return response
-	if(input_currency == None):
-		response = jsonify({'error': {'code' : '201', 'message': 'Input currency required'}})
-		response.status_code = 201
-		return response
+	err_msg = ""
+	if not amount:
+		err_msg = 'Amount required'
+	# Supposedly fastest way to check if a string is a number, benchmark results https://i.stack.imgur.com/DFoK6.png
+	# Problem discussed here https://stackoverflow.com/questions/354038/how-do-i-check-if-a-string-is-a-number-float
+	elif not(amount.replace('.','',1).isdigit()):
+		err_msg = 'Amount has to be a positive number'
+	elif not input_currency:
+		err_msg = 'Input currency required'
 	
-	try:
-		input_currency = recognize_symbol(input_currency)
-	except KeyError:
-		response = jsonify({'error': {'code' : '202', 'message': 'Input symbol was not recognized'}})
-		response.status_code = 202
+	if err_msg:
+		response = jsonify({'error': {'code' : '201', 'message': err_msg}})		
+		response.status_code = 201
 		return response
-
-	if(output_currency != None):
-		try:
-			output_currency = recognize_symbol(output_currency)
-		except KeyError:
-			response = jsonify({'error': {'code' : '202', 'message': 'Output symbol was not recognized'}})
-			response.status_code = 202
-			return response
-
-	decimal_amount = decimal.Decimal(amount)
 
 	rates = fetch_rates()
 
-	if(output_currency == None):
+	try:
+		input_currency = recognize_symbol(input_currency, rates)
+		if(output_currency != None):
+			output_currency = recognize_symbol(output_currency, rates)
+	except KeyError:
+		err_msg = 'Input or output symbol was not recognized'
+
+	if(err_msg):
+		response = jsonify({'error': {'code' : '202', 'message': err_msg}})		
+		response.status_code = 202
+		return response
+
+	decimal_amount = decimal.Decimal(amount)
+
+	if not output_currency :
 		try:
 			all_currencies = convert_to_output_currency(decimal_amount, input_currency, output_currency, rates)
 		except UnboundLocalError:

@@ -21,25 +21,18 @@ class __main__():
 		sys.stderr.write("Cannot convert a negative value!\n")
 		sys.exit(1)
 
-	try:
-		arguments.input_currency = recognize_symbol(arguments.input_currency)
-	except KeyError:
-		sys.stderr.write("Input currency was not recognized!\n")
-		sys.exit(2)
-
-	if(arguments.output_currency != None):
-		try:
-			arguments.output_currency = recognize_symbol(arguments.output_currency)
-		except KeyError:
-			sys.stderr.write("Output currency was not recognized!\n")
-			sys.exit(2)
-	
-	arguments.amount = str(round(arguments.amount, 2))
-	arguments.amount = decimal.Decimal(arguments.amount)
-
 	rates = fetch_rates()
+	try:
+		arguments.input_currency = recognize_symbol(arguments.input_currency, rates)
+		if(arguments.output_currency):
+			arguments.output_currency = recognize_symbol(arguments.output_currency, rates)
+	except KeyError:
+		sys.stderr.write("Input or output symbol was not recognized!\n")
+		sys.exit(2)
+	
+	arguments.amount = decimal.Decimal(str(round(arguments.amount, 2)))
 
-	if(arguments.output_currency == None):
+	if not arguments.output_currency:
 		try:
 			all_currencies = convert_to_output_currency(arguments.amount, arguments.input_currency, arguments.output_currency, rates)
 		except UnboundLocalError:
@@ -57,3 +50,4 @@ class __main__():
 		print(json.dumps({'input': {'amount': str(arguments.amount), 'currency': arguments.input_currency}, 'output': {arguments.output_currency : str(two_decimal_places)}}, indent = 4, sort_keys=True))
 
 	sys.exit(0)
+
