@@ -5,7 +5,7 @@
 # Date: 02/2018
 # File: mapping the symbol of a currency to its 3 letter abbreviation
 
-def decipher_symbol(symbol, rates):
+def decipher_symbol(symbol):
 	# Note: Countries with same currency symbols e.g. US Dollars and AU Dollars have their default currency
 	# USD for [AUD CAD HKD MXN NZD SGD], DKK for [SEK, ISK, NOK], JPY for [CNY]
 	return{

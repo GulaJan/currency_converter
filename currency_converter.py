@@ -28,7 +28,7 @@ def calculate_result(amount, input_currency, output_currency, currency_rates):
 
 def recognize_symbol(currency, rates):
 	if not rates.get(currency):
-		currency = decipher_symbol(currency, rates)
+		currency = decipher_symbol(currency)
 		if not currency:
 			raise KeyError
 	return currency
