@@ -5,7 +5,6 @@
 # File: API using Flask
 
 import sys
-import decimal
 from flask import Flask, request, jsonify
 from currency_converter import fetch_rates, convert_to_output_currency, recognize_symbol
 app = Flask(__name__)
@@ -34,38 +33,28 @@ def api():
 
 	try:
 		input_currency = recognize_symbol(input_currency, rates)
-		if(output_currency != None):
+		if output_currency:
 			output_currency = recognize_symbol(output_currency, rates)
 	except KeyError:
 		err_msg = 'Input or output symbol was not recognized'
 
-	if(err_msg):
+	if err_msg:
 		response = jsonify({'error': {'code' : '202', 'message': err_msg}})		
 		response.status_code = 202
 		return response
 
-	decimal_amount = decimal.Decimal(amount)
-
-	if not output_currency :
-		try:
-			all_currencies = convert_to_output_currency(decimal_amount, input_currency, output_currency, rates)
-		except UnboundLocalError:
-			response = jsonify({'error': {'code' : '202', 'message': 'Input currency was not recognized'}})
-			response.status_code = 202
-			return response
-
-		return jsonify({'input': {'amount': str(decimal_amount), 'currency': input_currency}, 'output': all_currencies})
-
+	try:
+		converted_val = convert_to_output_currency(amount, input_currency, output_currency, rates)
+	except UnboundLocalError:
+		response = jsonify({'error': {'code' : '202', 'message': 'Input or output currency was not recognized'}})
+		response.status_code = 202
+		return response
+	if output_currency:
+		converted_val = str(round(converted_val, 2))
+		output = {output_currency : converted_val}
 	else:
-		try:
-			converted_val = convert_to_output_currency(decimal_amount, input_currency, output_currency, rates)
-		except UnboundLocalError:
-			response = jsonify({'error': {'code' : '202', 'message': 'Input or output currency was not recognized'}})
-			response.status_code = 202
-			return response
-
-		two_decimal_places = str(round(converted_val, 2))
-		return jsonify({'input': {'amount': str(decimal_amount), 'currency': input_currency}, 'output': {output_currency : two_decimal_places}})
+		output = converted_val
+	return jsonify({'input': {'amount': str(amount), 'currency': input_currency}, 'output': output })
 
 if __name__ == '__main__' :
 	app.run('127.0.0.1', 5000)

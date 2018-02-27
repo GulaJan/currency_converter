@@ -22,21 +22,15 @@ def fetch_rates():
 	return currency_rates_dict
 
 def calculate_result(amount, input_currency, output_currency, currency_rates):
-	for currency_code in currency_rates:
-		if(currency_code == input_currency):
-			input_rate = currency_rates[currency_code]
-		if(currency_code == output_currency):
-			output_rate = currency_rates[currency_code]
-
-	return amount / decimal.Decimal(input_rate) * decimal.Decimal(output_rate)
+	input_rate = currency_rates.get(input_currency)
+	output_rate = currency_rates.get(output_currency)
+	return decimal.Decimal(amount) / decimal.Decimal(input_rate) * decimal.Decimal(output_rate)
 
 def recognize_symbol(currency, rates):
 	if not rates.get(currency):
-		try:
-			currency = decipher_symbol(currency)
-		except KeyError:
+		currency = decipher_symbol(currency, rates)
+		if not currency:
 			raise KeyError
-
 	return currency
 
 def convert_to_output_currency(amount, input_currency, output_currency, filtered_rates):
