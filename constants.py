@@ -42,4 +42,4 @@ def decipher_symbol(symbol):
 		'₱': 'PHP',
 		'฿': 'THB',
 		'R': 'ZAR',											
-	}[symbol]
+	}[symbol] # why not to use get here? :thinking_face:
